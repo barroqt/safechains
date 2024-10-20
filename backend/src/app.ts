@@ -1,14 +1,19 @@
 import express from "express";
+import actorRoutes from "./routes/actorRoutes";
+// import productRoutes from "./routes/productRoutes";
+// import transferRoutes from "./routes/transferRoutes";
 
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("SafeChains POC API");
+app.use("/api/actors", actorRoutes);
+// app.use("/api/products", productRoutes);
+// app.use("/api/transfers", transferRoutes);
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+export default app;

@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Actor {
+  id           String   @id @default(uuid())
+  name         String
+  role         String
+  contactInfo  Json
+  walletAddress String  @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Product {
+  id             String   @id @default(uuid())
+  name           String
+  description    String
+  nftId          String   @unique
+  manufacturerId String
+  currentStatus  String
+  ownerId        String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Transfer {
+  id             String   @id @default(uuid())
+  productId      String
+  fromActorId    String
+  toActorId      String
+  transferMethod String
+  status         String
+  timestamp      DateTime @default(now())
+}
