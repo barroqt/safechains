@@ -2,7 +2,7 @@
 
 import express from "express";
 import {
-  getActors,
+  getAllActors,
   getActor,
   createActor,
   updateActor,
@@ -12,7 +12,7 @@ import {
 const router = express.Router();
 
 // GET /api/actors
-router.get("/", getActors);
+router.get("/", getAllActors);
 
 // GET /api/actors/:id
 router.get("/:id", getActor);
