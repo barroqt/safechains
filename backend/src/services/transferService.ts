@@ -16,13 +16,7 @@ export const getTransferById = async (id: string): Promise<Transfer | null> => {
 export const createTransfer = async (
   data: TransferCreateInput
 ): Promise<Transfer> => {
-  return prisma.transfer.create({
-    data: {
-      ...data,
-      status: "PENDING",
-      timestamp: new Date(),
-    },
-  });
+  return prisma.transfer.create({ data });
 };
 
 export const updateTransfer = async (

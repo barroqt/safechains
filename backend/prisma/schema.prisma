@@ -11,7 +11,6 @@ model Actor {
   id           String   @id @default(uuid())
   name         String
   role         String
-  contactInfo  Json
   walletAddress String  @unique
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -29,12 +28,23 @@ model Product {
   updatedAt      DateTime @updatedAt
 }
 
+enum TransferMethod {
+  QR_CODE
+  CRYPTO_TRANSACTION
+}
+
+enum TransferStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
 model Transfer {
-  id             String   @id @default(uuid())
+  id             String         @id @default(uuid())
   productId      String
   fromActorId    String
   toActorId      String
-  transferMethod String
-  status         String
-  timestamp      DateTime @default(now())
+  transferMethod TransferMethod
+  status         TransferStatus
+  timestamp      DateTime       @default(now())
 }
