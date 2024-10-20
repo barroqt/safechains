@@ -140,13 +140,6 @@ export default router;
  *           type: string
  *         role:
  *           type: string
- *         contactInfo:
- *           type: object
- *           properties:
- *             email:
- *               type: string
- *             phone:
- *               type: string
  *         walletAddress:
  *           type: string
  *         createdAt:
@@ -160,20 +153,12 @@ export default router;
  *       required:
  *         - name
  *         - role
- *         - contactInfo
  *         - walletAddress
  *       properties:
  *         name:
  *           type: string
  *         role:
  *           type: string
- *         contactInfo:
- *           type: object
- *           properties:
- *             email:
- *               type: string
- *             phone:
- *               type: string
  *         walletAddress:
  *           type: string
  */

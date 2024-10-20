@@ -59,7 +59,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"John Doe\",\n  \"role\": \"Manufacturer\",\n  \"contactInfo\": {\n    \"email\": \"john@example.com\",\n    \"phone\": \"+1234567890\"\n  },\n  \"walletAddress\": \"0x1234567890123456789012345678901234567890\"\n}"
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"role\": \"Manufacturer\",\n  \"walletAddress\": \"0x1234567890123456789012345678901234567890\"\n}"
             }
           }
         },
