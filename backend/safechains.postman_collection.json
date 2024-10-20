@@ -1,0 +1,377 @@
+{
+  "info": {
+    "_postman_id": "b0b0b0b0-b0b0-b0b0-b0b0-b0b0b0b0b0b0",
+    "name": "Safe Chains API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api"
+    }
+  ],
+  "item": [
+    {
+      "name": "Actors",
+      "item": [
+        {
+          "name": "Get All Actors",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/actors",
+              "host": ["{{baseUrl}}"],
+              "path": ["actors"]
+            }
+          }
+        },
+        {
+          "name": "Get Actor by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/actors/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["actors", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "actor_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Actor",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/actors",
+              "host": ["{{baseUrl}}"],
+              "path": ["actors"]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"role\": \"Manufacturer\",\n  \"contactInfo\": {\n    \"email\": \"john@example.com\",\n    \"phone\": \"+1234567890\"\n  },\n  \"walletAddress\": \"0x1234567890123456789012345678901234567890\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Actor",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/actors/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["actors", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "actor_id_here"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe Updated\",\n  \"role\": \"Distributor\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Actor",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/actors/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["actors", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "actor_id_here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"]
+            }
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "product_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Product A\",\n  \"description\": \"This is product A\",\n  \"nftId\": \"nft_12345\",\n  \"manufacturerId\": \"manufacturer_id_here\",\n  \"currentStatus\": \"manufactured\",\n  \"ownerId\": \"owner_id_here\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/products/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "product_id_here"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Product A Updated\",\n  \"currentStatus\": \"in_transit\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/products/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "product_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Products by Manufacturer",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products/manufacturer/:manufacturerId",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "manufacturer", ":manufacturerId"],
+              "variable": [
+                {
+                  "key": "manufacturerId",
+                  "value": "manufacturer_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Products by Owner",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products/owner/:ownerId",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "owner", ":ownerId"],
+              "variable": [
+                {
+                  "key": "ownerId",
+                  "value": "owner_id_here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transfers",
+      "item": [
+        {
+          "name": "Get All Transfers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/transfers",
+              "host": ["{{baseUrl}}"],
+              "path": ["transfers"]
+            }
+          }
+        },
+        {
+          "name": "Get Transfer by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/transfers/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["transfers", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "transfer_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Transfer",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/transfers",
+              "host": ["{{baseUrl}}"],
+              "path": ["transfers"]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"product_id_here\",\n  \"fromActorId\": \"from_actor_id_here\",\n  \"toActorId\": \"to_actor_id_here\",\n  \"transferMethod\": \"QR_CODE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Transfer",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/transfers/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["transfers", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "transfer_id_here"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Transfer",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/transfers/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["transfers", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "transfer_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Transfers by Product",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/transfers/product/:productId",
+              "host": ["{{baseUrl}}"],
+              "path": ["transfers", "product", ":productId"],
+              "variable": [
+                {
+                  "key": "productId",
+                  "value": "product_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Transfers by Actor",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/transfers/actor/:actorId",
+              "host": ["{{baseUrl}}"],
+              "path": ["transfers", "actor", ":actorId"],
+              "variable": [
+                {
+                  "key": "actorId",
+                  "value": "actor_id_here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
