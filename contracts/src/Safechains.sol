@@ -11,6 +11,7 @@ contract Safechains is ERC721, Ownable, ReentrancyGuard, Pausable {
     IERC20 public usdcToken;
     uint256 public productCount;
     uint256 public listingCount;
+    uint256 public transferCount;
     uint256 public minListingPrice;
     uint256 public maxListingPrice;
 
@@ -20,10 +21,26 @@ contract Safechains is ERC721, Ownable, ReentrancyGuard, Pausable {
         Disputed
     }
 
+    enum TransferStatus {
+        Pending,
+        Completed,
+        Rejected
+    }
+
+    struct Transfer {
+        uint256 productId;
+        address from;
+        address to;
+        uint256 timestamp;
+        TransferStatus status;
+        string transferMetadata;
+    }
+
     struct Product {
         address owner;
-        address certifyingPartner;
+        address certifyingActor;
         uint256 certificationTime;
+        string metadata;
     }
 
     struct Listing {
@@ -36,22 +53,27 @@ contract Safechains is ERC721, Ownable, ReentrancyGuard, Pausable {
 
     mapping(uint256 => Product) public products;
     mapping(uint256 => Listing) public listings;
-    mapping(address => bool) public authorizedPartners;
+    mapping(uint256 => Transfer) public transfers;
+    mapping(address => bool) public authorizedActors;
     mapping(uint256 => uint256) public productToListingId;
+    mapping(uint256 => uint256[]) public productTransferHistory;
 
     uint256 public constant DISPUTE_PERIOD = 3 days;
-    uint256 public constant PLATFORM_FEE_PERCENT = 2; // 2% platform fee
+    uint256 public constant PLATFORM_FEE_PERCENT = 2;
 
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
-    event ProductCertified(uint256 indexed productId, address owner, address partner);
+    event ProductCertified(uint256 indexed productId, address owner, address actor);
     event ProductListed(uint256 indexed listingId, uint256 indexed productId, address seller, uint256 price);
     event ProductSold(uint256 indexed listingId, uint256 indexed productId, address buyer, uint256 price);
     event ListingDisputed(uint256 indexed listingId, address disputer);
     event ListingCancelled(uint256 indexed listingId);
-    event PartnerAuthorized(address partner);
-    event PartnerDeauthorized(address partner);
+    event ActorAuthorized(address actor);
+    event ActorDeauthorized(address actor);
+    event TransferInitiated(uint256 indexed transferId, uint256 productId, address from, address to);
+    event TransferCompleted(uint256 indexed transferId, uint256 productId, address from, address to);
+    event TransferRejected(uint256 indexed transferId, uint256 productId, address from, address to);
 
     /*//////////////////////////////////////////////////////////////
                              CUSTOM ERRORS
@@ -65,7 +87,7 @@ contract Safechains is ERC721, Ownable, ReentrancyGuard, Pausable {
     error TransferToSellerFailed();
     error PlatformFeeTransferFailed();
     error OnlyOwnerCanCancel();
-    error UnauthorizedPartner();
+    error UnauthorizedActor();
     error UnauthorizedCaller();
     error NotProductOwner();
     error ProductAlreadyListed();
@@ -73,12 +95,14 @@ contract Safechains is ERC721, Ownable, ReentrancyGuard, Pausable {
     error PriceBelowMinimum(uint256 price, uint256 minPrice);
     error PriceAboveMaximum(uint256 price, uint256 maxPrice);
     error ZeroAddress();
+    error InvalidTransferStatus();
+    error TransferDoesNotExist();
 
     /*//////////////////////////////////////////////////////////////
                                MODIFIERS
     //////////////////////////////////////////////////////////////*/
-    modifier onlyAuthorizedPartner() {
-        if (!authorizedPartners[msg.sender]) revert UnauthorizedPartner();
+    modifier onlyAuthorizedActor() {
+        if (!authorizedActors[msg.sender]) revert UnauthorizedActor();
         _;
     }
 
@@ -90,7 +114,7 @@ contract Safechains is ERC721, Ownable, ReentrancyGuard, Pausable {
     /*//////////////////////////////////////////////////////////////
                                CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
-    constructor(address _usdcToken) ERC721("ReluxProduct", "RLP") {
+    constructor(address _usdcToken) ERC721("Safechains") {
         if (_usdcToken == address(0)) revert ZeroAddress();
         usdcToken = IERC20(_usdcToken);
     }
@@ -98,94 +122,86 @@ contract Safechains is ERC721, Ownable, ReentrancyGuard, Pausable {
     /*//////////////////////////////////////////////////////////////
                            EXTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
-    function certifyPurchase(address _buyer) external onlyAuthorizedPartner whenNotPaused {
+    function certifyProduct(address _buyer, string calldata _metadata) external onlyAuthorizedActor whenNotPaused {
         if (_buyer == address(0)) revert ZeroAddress();
         productCount++;
         uint256 newProductId = productCount;
 
-        products[newProductId] =
-            Product({owner: _buyer, certifyingPartner: msg.sender, certificationTime: block.timestamp});
+        products[newProductId] = Product({
+            owner: _buyer,
+            certifyingActor: msg.sender,
+            certificationTime: block.timestamp,
+            metadata: _metadata
+        });
 
         _safeMint(_buyer, newProductId);
 
         emit ProductCertified(newProductId, _buyer, msg.sender);
     }
 
-    function createListing(uint256 _productId, uint256 _price) external onlyProductOwner(_productId) whenNotPaused {
-        if (_price < minListingPrice) revert PriceBelowMinimum(_price, minListingPrice);
-        if (_price > maxListingPrice) revert PriceAboveMaximum(_price, maxListingPrice);
+    function initiateTransfer(uint256 _productId, address _to, string calldata _transferMetadata)
+        external
+        onlyProductOwner(_productId)
+        whenNotPaused
+        returns (uint256)
+    {
+        if (!authorizedActors[_to]) revert UnauthorizedActor();
         if (productToListingId[_productId] != 0) revert ProductAlreadyListed();
 
-        listingCount++;
-        uint256 newListingId = listingCount;
+        transferCount++;
+        uint256 newTransferId = transferCount;
 
-        listings[newListingId] = Listing({
+        transfers[newTransferId] = Transfer({
             productId: _productId,
-            seller: payable(msg.sender),
-            price: _price,
-            listingTime: block.timestamp,
-            status: ListingStatus.Active
+            from: msg.sender,
+            to: _to,
+            timestamp: block.timestamp,
+            status: TransferStatus.Pending,
+            transferMetadata: _transferMetadata
         });
 
-        productToListingId[_productId] = newListingId;
+        productTransferHistory[_productId].push(newTransferId);
 
-        emit ProductListed(newListingId, _productId, msg.sender, _price);
+        emit TransferInitiated(newTransferId, _productId, msg.sender, _to);
+        return newTransferId;
     }
 
-    function buyProduct(uint256 _listingId) external nonReentrant whenNotPaused {
-        Listing storage listing = listings[_listingId];
-        if (listing.status != ListingStatus.Active) revert ListingNotActive();
+    function completeTransfer(uint256 _transferId) external whenNotPaused {
+        Transfer storage transfer = transfers[_transferId];
+        if (transfer.to != msg.sender) revert UnauthorizedCaller();
+        if (transfer.status != TransferStatus.Pending) revert InvalidTransferStatus();
 
-        uint256 platformFee = (listing.price * PLATFORM_FEE_PERCENT) / 100;
-        uint256 sellerAmount = listing.price - platformFee;
-        uint256 productId = listing.productId;
-        address seller = listing.seller;
+        uint256 productId = transfer.productId;
+        address from = transfer.from;
 
-        // Update the contract state
-        listing.status = ListingStatus.Sold;
-        _transfer(seller, msg.sender, productId);
+        transfer.status = TransferStatus.Completed;
         products[productId].owner = msg.sender;
-        delete productToListingId[productId];
 
-        // Perform token transfers
-        if (!usdcToken.transferFrom(msg.sender, address(this), listing.price)) revert PaymentFailed();
-        if (!usdcToken.transfer(seller, sellerAmount)) revert TransferToSellerFailed();
-        if (!usdcToken.transfer(owner(), platformFee)) revert PlatformFeeTransferFailed();
+        _transfer(from, msg.sender, productId);
 
-        emit ProductSold(_listingId, productId, msg.sender, listing.price);
+        emit TransferCompleted(_transferId, productId, from, msg.sender);
     }
 
-    function disputeListing(uint256 _listingId) external whenNotPaused {
-        Listing storage listing = listings[_listingId];
-        if (listing.status != ListingStatus.Active) revert ListingInDisputedState();
-        if (block.timestamp > listing.listingTime + DISPUTE_PERIOD) revert DisputePeriodNotOver();
+    function rejectTransfer(uint256 _transferId) external whenNotPaused {
+        Transfer storage transfer = transfers[_transferId];
+        if (transfer.to != msg.sender) revert UnauthorizedCaller();
+        if (transfer.status != TransferStatus.Pending) revert InvalidTransferStatus();
 
-        listing.status = ListingStatus.Disputed;
+        transfer.status = TransferStatus.Rejected;
 
-        emit ListingDisputed(_listingId, msg.sender);
+        emit TransferRejected(_transferId, transfer.productId, transfer.from, msg.sender);
     }
 
-    function cancelListing(uint256 _listingId) external whenNotPaused {
-        Listing storage listing = listings[_listingId];
-        if (listing.status != ListingStatus.Active) revert ListingNotActive();
-        if (listing.seller != msg.sender) revert OnlyOwnerCanCancel();
-
-        delete listings[_listingId];
-        delete productToListingId[listing.productId];
-
-        emit ListingCancelled(_listingId);
+    function authorizeActor(address _actor) external onlyOwner {
+        if (_actor == address(0)) revert ZeroAddress();
+        authorizedActors[_actor] = true;
+        emit ActorAuthorized(_actor);
     }
 
-    function authorizePartner(address _partner) external onlyOwner {
-        if (_partner == address(0)) revert ZeroAddress();
-        authorizedPartners[_partner] = true;
-        emit PartnerAuthorized(_partner);
-    }
-
-    function deauthorizePartner(address _partner) external onlyOwner {
-        if (_partner == address(0)) revert ZeroAddress();
-        authorizedPartners[_partner] = false;
-        emit PartnerDeauthorized(_partner);
+    function deauthorizeActor(address _actor) external onlyOwner {
+        if (_actor == address(0)) revert ZeroAddress();
+        authorizedActors[_actor] = false;
+        emit ActorDeauthorized(_actor);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -205,7 +221,7 @@ contract Safechains is ERC721, Ownable, ReentrancyGuard, Pausable {
     }
 
     /*//////////////////////////////////////////////////////////////
-                                GETTERS
+                             VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////*/
     function getProduct(uint256 _productId) external view returns (Product memory) {
         if (_productId == 0 || _productId > productCount) revert ProductDoesNotExist();
@@ -215,6 +231,15 @@ contract Safechains is ERC721, Ownable, ReentrancyGuard, Pausable {
     function getListing(uint256 _listingId) external view returns (Listing memory) {
         if (_listingId == 0 || _listingId > listingCount) revert ListingDoesNotExist();
         return listings[_listingId];
+    }
+
+    function getProductTransferHistory(uint256 _productId) external view returns (uint256[] memory) {
+        return productTransferHistory[_productId];
+    }
+
+    function getTransfer(uint256 _transferId) external view returns (Transfer memory) {
+        if (_transferId == 0 || _transferId > transferCount) revert TransferDoesNotExist();
+        return transfers[_transferId];
     }
 
     /*//////////////////////////////////////////////////////////////
